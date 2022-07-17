@@ -1,0 +1,14 @@
+{
+  "name": "codehorn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/renzil/codehorn.git",
+  "author": "Renzil DSouza <renzil@gmail.com>",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "firebase-tools": "^11.2.2"
+  },
+  "scripts": {
+    "build": ""
+  }
+}
