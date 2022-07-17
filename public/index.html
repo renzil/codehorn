@@ -1,89 +1,144 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/9.9.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/9.9.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/9.9.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+<head>
+  <meta charset=utf-8 />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Sign In Example</title>
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
+  <!-- Material Design Theming -->
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.orange-indigo.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Import and configure the Firebase SDK -->
+  <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+  <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+  <script src="/__/firebase/9.9.0/firebase-app-compat.js"></script>
+  <script src="/__/firebase/9.9.0/firebase-auth-compat.js"></script>
+  <script src="/__/firebase/init.js"></script>
+
+  <script type="text/javascript">
+
+    /**
+     * Function called when clicking the Login/Logout button.
+     */
+    function toggleSignIn() {
+      if (!firebase.auth().currentUser) {
+        var provider = new firebase.auth.GithubAuthProvider();
+        provider.addScope('repo');
+        firebase.auth().signInWithPopup(provider).then(function (result) {
+          // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+          var token = result.credential.accessToken;
+          // The signed-in user info.
+          var user = result.user;
+          document.getElementById('quickstart-oauthtoken').textContent = token;
+        }).catch(function (error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // The email of the user's account used.
+          var email = error.email;
+          // The firebase.auth.AuthCredential type that was used.
+          var credential = error.credential;
+          if (errorCode === 'auth/account-exists-with-different-credential') {
+            alert('You have already signed up with a different auth provider for that email.');
+            // If you are using multiple auth providers on your app you should handle linking
+            // the user's accounts here.
+          } else {
+            console.error(error);
+          }
+        });
+      } else {
+        firebase.auth().signOut();
       }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-    </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
+      document.getElementById('quickstart-sign-in').disabled = true;
+    }
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+    /**
+     * initApp handles setting up UI event listeners and registering Firebase auth listeners:
+     *  - firebase.auth().onAuthStateChanged: This listener is called when the user is signed in or
+     *    out, and that is where we update the UI.
+     */
+    function initApp() {
+      // Listening for auth state changes.
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          // User is signed in.
+          var displayName = user.displayName;
+          var email = user.email;
+          var emailVerified = user.emailVerified;
+          var photoURL = user.photoURL;
+          var isAnonymous = user.isAnonymous;
+          var uid = user.uid;
+          var providerData = user.providerData;
+          document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
+          document.getElementById('quickstart-sign-in').textContent = 'Sign out';
+          document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
+        } else {
+          // User is signed out.
+          document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
+          document.getElementById('quickstart-sign-in').textContent = 'Sign in with GitHub';
+          document.getElementById('quickstart-account-details').textContent = 'null';
+          document.getElementById('quickstart-oauthtoken').textContent = 'null';
         }
+        document.getElementById('quickstart-sign-in').disabled = false;
       });
-    </script>
-  </body>
+
+      document.getElementById('quickstart-sign-in').addEventListener('click', toggleSignIn, false);
+    }
+
+    window.onload = function () {
+      initApp();
+    };
+  </script>
+</head>
+
+<body>
+  <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+
+    <!-- Header section containing title -->
+    <header class="mdl-layout__header mdl-color-text--white mdl-color--light-blue-700">
+      <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+        <div class="mdl-layout__header-row mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--8-col-desktop">
+          <a href="/">
+            <h3>Firebase Authentication</h3>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="mdl-layout__content mdl-color--grey-100">
+      <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+
+        <!-- Container for the demo -->
+        <div
+          class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--12-col-desktop">
+          <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+            <h2 class="mdl-card__title-text">GitHub Authentication with Popup</h2>
+          </div>
+          <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+            <p>Sign in with your GitHub account below.</p>
+
+            <!-- Button that handles sign-in/sign-out -->
+            <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="quickstart-sign-in">Sign in with
+              GitHub</button>
+
+            <!-- Container where we'll display the user details -->
+            <div class="quickstart-user-details-container">
+              Firebase sign-in status: <span id="quickstart-sign-in-status">Unknown</span>
+              <div>Firebase auth <code>currentUser</code> object value:</div>
+              <pre><code id="quickstart-account-details">null</code></pre>
+              <div>GitHub OAuth Access Token:</div>
+              <pre><code id="quickstart-oauthtoken">null</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
 </html>
