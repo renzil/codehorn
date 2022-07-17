@@ -9,6 +9,6 @@
     "firebase-tools": "^11.2.2"
   },
   "scripts": {
-    "build": ""
+    "build": "exit 0"
   }
 }
