@@ -1,7 +1,9 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 
-fs.mkdirSync('public');
+if (!fs.existsSync('public')) {
+    fs.mkdirSync('public');
+}
 
 const testFolder = 'src/partials/';
 const files = fs.readdirSync(testFolder).map(file => testFolder + file);
