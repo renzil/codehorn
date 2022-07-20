@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    width: 100%;
+    max-width: 100%;
+}
+
+main {
+    background-color: #fafafa;
+    color: black;
+    width: 100%;
+    max-width: 100%;
+}
+
+pre {
+    overflow: auto;
+}
