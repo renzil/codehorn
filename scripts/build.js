@@ -15,4 +15,5 @@ const callback = (err, stdout, stderr) => {
     console.log(stdout);
 }
 exec(`node_modules/.bin/mustache ${partials} src/data.json src/index.mustache public/index.html `, callback);
-exec(`node_modules/.bin/tailwind -i src/input.css -o public/output.css`, callback);
+exec(`node_modules/.bin/tailwind -i src/main.css -o public/bundle.css`, callback);
+exec(`node_modules/.bin/rollup -c`, callback);
