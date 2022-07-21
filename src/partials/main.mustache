@@ -1,60 +1,81 @@
-{{> hero-login}}
-{{> legacy}}
+<main>
+  {{> hero}}
+  {{> repos}}
+</main>
 
-<script type="application/javascript" defer>
+<script type="application/javascript">
   (function MAIN_NAMESPACE() {
 
     const model = {
     };
 
-    function updateModel(newModel) {
-      Object.assign(model, newModel);
-      dispatch('model-updated', model);
+    function update(key, value) {
+      model[key] = value;
+      return dispatch(`${key}-changed`, value);
     }
 
-    function getUserDoc(userUid) {
-        return firebase.firestore().collection("users").doc(userUid);
-    }
-    function getGitHubDoc(userUid) {
-        return getUserDoc(userUid).collection("providers").doc("github");
-    }
-    function callGithubApi(endpoint, accessToken) {
-        return fetch(`https://api.github.com${endpoint}`, {
-            headers: {
-                Accept: "application/vnd.github+json",
-                Authorization: `token ${accessToken}`,
-            }
-        }).then(response => response.json());
-    }
-
-    function loadGitHubModel(userUid) {
-        return getGitHubDoc(userUid).get().then(snapshot => {
-            if (snapshot.exists) {
-                const data = snapshot.data();
-                updateModel({ github: data });
-                return model;
-            }
-            return null;
-        }).then(model => onGitHubModelLoaded(model));
+    function getDocRef(key) {
+      let ref = null;
+      if (typeof key === "string") {
+        key = key.split(".");
+      }
+      for (let i = 0; i < key.length; i++) {
+        if (i === 0) {
+          ref = firebase.firestore().collection(key[i]);
+        } else if (i % 2 === 1) {
+          ref = ref.doc(key[i]);
+        } else {
+          ref = ref.collection(key[i]);
+        }
+      }
+      return ref;
     }
 
-    function onSignedIn(result) {
-      const p = [getUserDoc(result.user.uid).set({
-          name: result.user.displayName,
-          email: result.user.email,
-          photo: result.user.photoURL,
-      }), getGitHubDoc(result.user.uid).set({
-          profile: result.additionalUserInfo.profile,
-          credential: {
-              accessToken: result.credential.accessToken,
-              pendingToken: result.credential.pendingToken,
-              providerId: result.credential.providerId,
-              signInMethod: result.credential.signInMethod,
-          },
-      })];
-      Promise.all(p).then(() => {
-          loadGitHubModel(result.user.uid);
-      });
+    function storeAndUpdateModel(dbKey, modelKey, data) {
+      return getDocRef(dbKey).set(data).then(() => update(modelKey, data));
+    }
+
+    function fetchAndUpdateModel(dbKey, modelKey) {
+      return getDocRef(dbKey).get()
+        .then(snapshot => snapshot.data())
+        .then(data => update(modelKey, data));
+    }
+
+    function onCallGithubApi(event) {
+      const request = event.detail;
+      return fetch(`https://api.github.com${request.endpoint}`, {
+        headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `token ${request.token}`,
+        }
+      })
+        .then(response => response.json())
+        .then(data => dispatch('github-api-response', { endpoint: request.endpoint, data: data }));
+    }
+
+    function onSignInDone(result) {
+      const p = [];
+      if (result.additionalUserInfo.isNewUser) {
+        const profile = {
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL,
+        };
+        p.push(storeAndUpdateModel(`users.${result.uid}`, 'user-profile', profile));
+      }
+      if (result.credential.providerId === "github.com") {
+        const profile = {
+            profile: result.additionalUserInfo.profile,
+            credential: {
+                accessToken: result.credential.accessToken,
+                pendingToken: result.credential.pendingToken,
+                providerId: result.credential.providerId,
+                signInMethod: result.credential.signInMethod,
+            },
+        }
+        p.push(storeAndUpdateModel(`users.${result.uid}.providers.github`, 'github-profile', profile));
+      }
+      return Promise.all(p);
     }
 
     function onSignin() {
@@ -68,7 +89,7 @@
       //});
 
       firebase.auth().signInWithPopup(provider).then(async function (result) {
-          onSignedIn(result);
+          onSignInDone(result);
       }).catch(function (error) {
           var errorCode = error.code;
           if (errorCode === 'auth/account-exists-with-different-credential') {
@@ -82,48 +103,6 @@
     function onRepoListItemClicked(event) {
     }
 
-    function onGitHubModelLoaded(model) {
-        console.log("MODEL: ", model);
-        const token = model.github.credential.accessToken;
-        const my_github_user_name = model.github.profile.login;
-
-        callGithubApi("/user/repos", token).then(repos => {
-            console.log('All repos: ', repos);
-            const my_repos = repos.filter(repo => repo.owner.login === my_github_user_name)
-            console.log('My repos:', my_repos);
-            const repo_list_items_str = my_repos.map(repo => `<li class="mdl-list__item" data-repo-name="${repo.name}">
-    <div class="repo-list-item-container">
-    <p class="mdl-list__item-primary-content">${repo.name}</p>
-    <div>
-    <div class="mdl-spinner mdl-js-spinner is-active"></div>
-    <i class="material-icons" style="display: none;">check_circle</i>
-    <i class="material-icons" style="display: none;">notifications</i>
-    </div>
-    </div>
-    </li>`).join("");
-            const repos_list = document.getElementById("repos-list");
-            repos_list.innerHTML = repo_list_items_str;
-
-            (function addRepoClickHandlers() {
-                repo_list_items = document.getElementsByClassName("mdl-list__item");
-                for (var i = 0; i < repo_list_items.length; i++) {
-                    repo_list_items[i].addEventListener('click', function () {
-                        console.log("clicked repo: ", this.innerText);
-                    });
-                }
-            })();
-
-            /*(function updateRepoHooks(repos) {
-                repos.forEach(repo => {
-                    callGithubApi(`/repos/${repo.owner.login}/${repo.name}/hooks`, token).then(hooks => {
-                        //document.querySelector(`[data-repo-name="${repo.name}"]`).innerText = `${repo.name} (${hooks.length})`;
-                        console.log(hooks);
-                    });
-                });
-            })(my_repos);*/
-        });
-    }
-
     function onLogout() {
       firebase.auth().signOut();
     }
@@ -131,15 +110,17 @@
     function initApp() {
         firebase.auth().onAuthStateChanged(function (user) {
             if (user) {
-                updateModel({ loggedIn: true, loading: true, user: user });
-                loadGitHubModel(user.uid);
+                update('auth', { loggedIn: true, loading: true, user: user });
+                fetchAndUpdateModel(`users.${user.uid}`, 'user-profile');
+                fetchAndUpdateModel(`users.${user.uid}.providers.github`, 'github-profile');
             } else {
-                updateModel({ loggedIn: false, loading: false });
+                update('auth', { loggedIn: false, loading: false });
             }
         });
 
-        subscribe('signin', onSignin)
-        subscribe('logout', onLogout)
+        listen('signin', onSignin)
+        listen('logout', onLogout)
+        listen('github-api-call', onCallGithubApi);
     }
 
     window.onload = function () {

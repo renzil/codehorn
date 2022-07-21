@@ -18,7 +18,7 @@
     </div>
   </div>
 </div>
-<script type="application/javascript" defer>
+<script type="application/javascript">
   (function NAVBAR_NAMESPACE() {
 
     function onSignInClick() {
@@ -29,13 +29,13 @@
       dispatch('logout');
     }
     
-    function onModelUpdate(event) {
-      const model = event.detail;
-      if (model.loggedIn === true) {
+    function onAuthChanged(event) {
+      const auth = event.detail;
+      if (auth.loggedIn === true) {
         document.getElementById('navbar-signin-btn').classList.add('hidden');
         document.getElementById('navbar-dropdown').classList.remove('hidden');
-        document.getElementById('navbar-profile-image').src = model.user.photoURL;
-      } else if (model.loggedIn === false) {
+        document.getElementById('navbar-profile-image').src = auth.user.photoURL;
+      } else if (auth.loggedIn === false) {
         document.getElementById('navbar-signin-btn').classList.remove('hidden');
         document.getElementById('navbar-dropdown').classList.add('hidden');
       } else {
@@ -45,7 +45,7 @@
     }
 
     function onLoad() {
-      subscribe('model-updated', onModelUpdate);
+      listen('auth-changed', onAuthChanged);
       document.getElementById('navbar-signin-btn').addEventListener('click', onSignInClick);
       document.getElementById('navbar-logout-btn').addEventListener('click', onLogoutClick);
     }

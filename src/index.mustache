@@ -24,11 +24,11 @@
 
     function dispatch(name, data) {
       const event = new CustomEvent(name, { detail: data });
-      window.document.dispatchEvent(event);
+      return window.document.dispatchEvent(event);
     }
 
-    function subscribe(name, callback) {
-      window.document.addEventListener(name, callback);
+    function listen(name, callback) {
+      return window.document.addEventListener(name, callback);
     }
   </script>
 </head>
