@@ -1,14 +1,11 @@
-<section id="repos-section" class="hidden">
-  <ul id="repos-list">
-    <!--div class="repo-list-item-container">
-      <p class="mdl-list__item-primary-content">littleonesbookhub</p>
-      <div>
-        <div class="mdl-spinner mdl-js-spinner is-active"></div>
-        <i class="material-icons" style="display: none;">check_circle</i>
-        <i class="material-icons" style="display: none;">notifications</i>
-      </div>
-    </div-->
-  </ul>
+<section id="repos-section" class="hidden w-full md:max-w-2xl mx-auto py-8 w-full">
+  <div class="card w-full h-[80vh] max-h-[80vh] bg-base-100 shadow-xl">
+    <div class="card-body h-full">
+      <h2 class="card-title">Select a repository to continue</h2>
+      <input id="search-repos-input" type="text" placeholder="Search repository" class="input input-bordered w-full h-12 min-h-[3rem]" />
+      <div id="repos-list" class="btn-group btn-group-vertical grow overflow-y-scroll"></div>
+    </div>
+  </div>
 </section>
 
 <script type="application/javascript">
@@ -44,11 +41,9 @@
       console.log('All repos: ', repos);
       const my_repos = repos.filter(repo => repo.owner.login === githubProfile.profile.login)
       console.log('My repos:', my_repos);
-      const repo_list_items_str = my_repos.map(repo => `<li data-repo-name="${repo.name}">
-<div>
-  <p>${repo.name}</p>
-</div>
-</li>`).join("");
+      const repo_list_items_str = my_repos.map(repo => `<button data-repo-name="${repo.name}" class="btn repo-btn">
+  ${repo.name}
+</button>`).join("\n");
       const repos_list = document.getElementById("repos-list");
       repos_list.innerHTML = repo_list_items_str;
 
@@ -70,11 +65,24 @@
           });
       })(my_repos);*/
     }
+
+    function onSearchInputChange(event) {
+      const filter = this.value;
+
+      document.querySelectorAll('.repo-btn').forEach(repo_btn => {
+        if (!filter || repo_btn.innerText.toLowerCase().indexOf(filter.toLowerCase()) !== -1) {
+          repo_btn.classList.remove('hidden');
+        } else {
+          repo_btn.classList.add('hidden');
+        }
+      });
+    }
   
     function onLoad() {
       listen('auth-changed', onAuthChanged);
       listen('github-profile-changed', onGitHubProfileChanged);
       listen('github-api-response', onGitHubApiResponse);
+      document.getElementById('search-repos-input').addEventListener('keyup', onSearchInputChange);
     }
     
     entry(onLoad);
