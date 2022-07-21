@@ -1,27 +1,55 @@
 <div class="navbar bg-base-100">
   <div class="flex-1">
-    <a class="btn btn-ghost normal-case text-xl">daisyUI</a>
+    <a class="btn btn-ghost normal-case text-xl">Codehorn</a>
   </div>
   <div class="flex-none gap-2">
-    <div class="form-control">
-      <input type="text" placeholder="Search" class="input input-bordered" />
-    </div>
-    <div class="dropdown dropdown-end">
+    <button id="navbar-signin-btn" class="hidden btn btn-primary">Sign In</button>
+    <div id="navbar-dropdown" class="hidden dropdown dropdown-end">
       <label tabindex="0" class="btn btn-ghost btn-circle avatar">
         <div class="w-10 rounded-full">
-          <img src="https://placeimg.com/80/80/people" />
+          <img id="navbar-profile-image" />
         </div>
       </label>
-      <ul tabindex="0" class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
-        <li>
-          <a class="justify-between">
-            Profile
-            <span class="badge">New</span>
-          </a>
-        </li>
+      <ul tabindex="0" class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box">
+        <li><a>Profile</a></li>
         <li><a>Settings</a></li>
-        <li><a>Logout</a></li>
+        <li id="navbar-logout-btn"><a>Logout</a></li>
       </ul>
     </div>
   </div>
 </div>
+<script type="application/javascript" defer>
+  (function NAVBAR_NAMESPACE() {
+
+    function onSignInClick() {
+      dispatch('signin');
+    }
+
+    function onLogoutClick() {
+      dispatch('logout');
+    }
+    
+    function onModelUpdate(event) {
+      const model = event.detail;
+      if (model.loggedIn === true) {
+        document.getElementById('navbar-signin-btn').classList.add('hidden');
+        document.getElementById('navbar-dropdown').classList.remove('hidden');
+        document.getElementById('navbar-profile-image').src = model.user.photoURL;
+      } else if (model.loggedIn === false) {
+        document.getElementById('navbar-signin-btn').classList.remove('hidden');
+        document.getElementById('navbar-dropdown').classList.add('hidden');
+      } else {
+        document.getElementById('navbar-signin-btn').classList.add('hidden');
+        document.getElementById('navbar-dropdown').classList.add('hidden');
+      }
+    }
+
+    function onLoad() {
+      subscribe('model-updated', onModelUpdate);
+      document.getElementById('navbar-signin-btn').addEventListener('click', onSignInClick);
+      document.getElementById('navbar-logout-btn').addEventListener('click', onLogoutClick);
+    }
+    
+    entry(onLoad);
+  })();
+</script>
